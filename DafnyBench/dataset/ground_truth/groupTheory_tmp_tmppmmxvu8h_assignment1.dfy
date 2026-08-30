@@ -62,7 +62,7 @@ lemma Q2_DistributivityOfSetUnionOverSetIntersection(A: set, B: set, C: set)
 			else
 			{
 				assert 6: x in (B*C);
-				assert 7: (x in A || x in B ) && (x in A || x in C) by {reveal 6,3;}
+				assert 7: (x in A || x in B ) && (x in A || x in C) by {reveal 6;}
 				assert 8: x in (A+B)*(A+C) by {reveal 7; }
 				assert 9: x in R by {reveal 8;}		
 			}	
