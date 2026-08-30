@@ -1,3 +1,41 @@
+# DafnyBench
+
+This is a fork of [DafnyBench](https://github.com/sun-wendy/DafnyBench) for the purpose of 
+evaluating the performance of the Boogie TPTP plugin.
+
+The original DafnyBench repository and its contents are distributed under the Apache License, 
+Version 2.0. The original `LICENSE` file is retained in this repository.
+
+The following changes were made to the source:
+
+- Deleted Dafny programs containing bitvectors:
+  - `DafnyBench/dataset/ground_truth/BinaryAddition.dfy`
+  - `DafnyBench/dataset/ground_truth/Clover_swap_bitvector.dfy`
+  - `DafnyBench/dataset/ground_truth/Dafny-Practice_tmp_tmphnmt4ovh_Pattern Matching.dfy`
+  - `DafnyBench/dataset/ground_truth/Program-Verification-Dataset_tmp_tmpgbdrlnu__Dafny_from dafny main repo_dafny4_ACL2-extractor.dfy`
+  - `DafnyBench/dataset/ground_truth/WrappedEther.dfy`
+  - `DafnyBench/dataset/ground_truth/dafl_tmp_tmp_r3_8w3y_dafny_examples_dafny0_SharedDestructorsCompile.dfy`
+  - `DafnyBench/dataset/ground_truth/dafny-synthesis_task_id_399.dfy`
+  - `DafnyBench/dataset/ground_truth/dafny-synthesis_task_id_799.dfy`
+- Edited `groupTheory_tmp_tmppmmxvu8h_assignment1.dfy` such that it verifies under Dafny 4.11.0
+- Added the script used to execute the benchmark and measure the performance of the TPTP plugin.
+Run with `./run-benchmarks <TPTP Prelude> <TPTP Plugin> DafnyBench/dataset/ground_truth`
+
+The modifications were made by Marek Ryšavý on 30. August 2026, are made available under the same license.
+
+The original benchmark programs are attributed to Chloe Loughridge, Qinyi Sun, Seth Ahrenbach, Federico Cassano, 
+Chuyue Sun, Ying Sheng, Anish Mudide, Md Rakib Hossain Misu, Nada Amin and Max Tegmark.
+
+Original work:
+
+> Chloe Loughridge et al., "DafnyBench: A Benchmark for Formal Software Verification", 2024.
+
+Paper: [https://arxiv.org/abs/2406.08467](https://arxiv.org/abs/2406.08467)
+
+Repository: [https://github.com/sun-wendy/DafnyBench](https://github.com/sun-wendy/DafnyBench)
+
+Original README:
+
 # DafnyBench: A Benchmark for Formal Software Verification
 
 Dataset & code for our paper [DafnyBench: A Benchmark for Formal Software Verification](https://arxiv.org/abs/2406.08467)

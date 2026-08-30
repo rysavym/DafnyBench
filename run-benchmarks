@@ -1,0 +1,319 @@
+#!/bin/sh
+
+# Author: Marek Ryšavý, 2026
+
+# OUTPUT FORMAT:
+#
+# suite,    benchmark,      language,   prover,         type_encoding,      verification_result,     elapsed_ms,     exit_code
+# basic,    Strings.dfy,    tptp,       vampire,        polymorphic,        VERIFIED,                1654,           0
+#
+#
+# VERIFICATION RESULTS:
+#
+# VERIFIED = program verified without errors 
+# NOT_VERIFIED = dafny returned that some path failed to verify
+# VERIFICATION_TIMED_OUT = verification timed out
+# UNKNOWN = for all other statuses, including resource limit, user error, warnings, inconclusive, solver exceptions etc. Should never 
+
+if [ "$#" -lt 3 ]; then
+    echo "Usage: $0 TPTP_PRELUDE TPTP_PLUGIN BENCHMARKS..." >&2
+    echo
+    echo "Help:"
+    echo "TPTP_PRELUDE: the path to the TPTP prelude"
+    echo "TPTP_PLUGIN: the path to the TPTP plugin (to be supplied as --solver-plugin to Dafny). Should be under dafny/Binaries."
+    echo "BENCHMARKS: one or more directories that contain .dfy files to be included in the benchmark"
+    exit 1
+fi
+
+TPTP_PRELUDE="$1"
+TPTP_PLUGIN="$2"
+shift 2
+
+DAFNY_VERIFICATION_TIME_LIMIT="15" # in seconds
+REPEAT="1" # how many times to run a single benchmark in each configuration
+
+TYPE_ENCODING_POLYMORPHIC="polymorphic"
+TYPE_ENCODING_MONOMORPHIC="monomorphic"
+TYPE_ENCODING_PREDICATES="predicates"
+TYPE_ENCODING_ARGUMENTS="arguments"
+
+VERIFICATION_RESULT_VERIFIED="VERIFIED"
+VERIFICATION_RESULT_NOT_VERIFIED="NOT_VERIFIED"
+VERIFICATION_RESULT_VERIFICATION_TIMED_OUT="VERIFICATION_TIMED_OUT"
+VERIFICATION_RESULT_VERIFICATION_OUT_OF_RESOURCE="VERIFICATION_OUT_OF_RESOURCE"
+VERIFICATION_RESULT_UNKNOWN="UNKNOWN"
+
+LANGUAGE_TPTP="tptp"
+LANGUAGE_SMTLIB="smtlib"
+
+PROVER_VAMPIRE="vampire"
+PROVER_Z3="z3"
+
+verify_vampire_tptp_polymorphic() 
+{
+    dafny verify \
+        --solver-plugin "$TPTP_PLUGIN" \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+verify_vampire_tptp_arguments() 
+{
+    dafny verify \
+        --solver-plugin "$TPTP_PLUGIN" \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /proverOpt:ENABLE_TYPE_ERASURE /typeEncoding:a" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+verify_vampire_tptp_predicates() 
+{
+    dafny verify \
+        --solver-plugin "$TPTP_PLUGIN" \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /proverOpt:ENABLE_TYPE_ERASURE /typeEncoding:p" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+# this requires the Vampire SMT-LIB patch
+verify_vampire_tptp_monomorphic() 
+{
+    dafny verify \
+        --solver-plugin "$TPTP_PLUGIN" \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /proverOpt:ENABLE_TYPE_ERASURE /typeEncoding:m" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+# this requires the Vampire SMT-LIB patch
+verify_vampire_smtlib_arguments() 
+{
+    dafny verify \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /typeEncoding:a" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+# this requires the Vampire SMT-LIB patch
+verify_vampire_smtlib_predicates() 
+{
+    dafny verify \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /typeEncoding:p" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+# this requires the Vampire SMT-LIB patch
+verify_vampire_smtlib_monomorphic() 
+{
+    dafny verify \
+        --prelude "$TPTP_PRELUDE" \
+        --boogie "/proverOpt:SOLVER=vampire /proverOpt:C:--mode /proverOpt:C:casc /typeEncoding:m /useArrayAxioms" \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --allow-warnings \
+        "$1"
+}
+
+verify_z3_smtlib_arguments() 
+{
+    dafny verify \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --boogie "/typeEncoding:a" \
+        --allow-warnings \
+        "$1"
+}
+
+verify_z3_smtlib_predicates() 
+{
+    dafny verify \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --boogie "/typeEncoding:p" \
+        --allow-warnings \
+        "$1"
+}
+
+verify_z3_smtlib_monomorphic() 
+{
+    dafny verify \
+        --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --boogie "/typeEncoding:m" \
+        --allow-warnings \
+        "$1"
+}
+
+# Arguments: benchmark, language, prover, type_encoding
+execute_dafny()
+{
+    # Check correct number of arguments
+    [ "$#" = 4 ] || exit 3
+
+    # Get the arguments
+    BENCHMARK="$1"
+    LANGUAGE="$2"
+    PROVER="$3"
+    TYPE_ENCODING="$4"
+    
+    # construct the command
+    CMD="verify_${PROVER}_${LANGUAGE}_${TYPE_ENCODING}"
+    $CMD "$BENCHMARK"
+}
+
+# Arguments: suite, benchmark, language, prover, type_encoding
+run_benchmark() 
+{
+    # Check correct number of arguments
+    [ "$#" = 5 ] || exit 2
+
+    # Get the arguments
+    SUITE="$1"
+    BENCHMARK="$2"
+    LANGUAGE="$3"
+    PROVER="$4"
+    TYPE_ENCODING="$5"
+
+    # temp file to save Dafny's output
+    OUTPUT=$(mktemp)
+
+    # then run dafny and measure the time
+    START=$(date +%s%N)
+    execute_dafny "$BENCHMARK" "$LANGUAGE" "$PROVER" "$TYPE_ENCODING" > "$OUTPUT" 2>&1
+    EXIT_CODE=$?
+    END=$(date +%s%N)
+
+    # calculate the time it took
+    ELAPSED_NS=$((END - START))
+    ELAPSED_MS=$((ELAPSED_NS / 1000000))
+
+    # lastly get the verification result
+    VERIFICATION_RESULT="$VERIFICATION_RESULT_UNKNOWN"
+    
+    # on success, get success
+    if [ "$EXIT_CODE" = 0 ]; then
+        VERIFICATION_RESULT="$VERIFICATION_RESULT_VERIFIED"
+    fi
+
+    # else try to parse not_verified and timeout
+    if [ "$EXIT_CODE" = 4 ]; then
+
+        # if there is 'n error(s)' where n != 0, then return not_verified
+        if grep -Eq '[1-9][0-9]*[[:space:]]+errors?' "$OUTPUT"; then
+            VERIFICATION_RESULT="$VERIFICATION_RESULT_NOT_VERIFIED"
+        fi
+
+        # if there is 'n time out(s)' where n != 0, then return timed_out
+        if grep -Eq '[1-9][0-9]*[[:space:]]+time[[:space:]]+outs?' "$OUTPUT"; then
+            VERIFICATION_RESULT="$VERIFICATION_RESULT_VERIFICATION_TIMED_OUT"
+        fi
+
+        # if there is 'n out of resource' where n != 0, then return out_of_resource
+        if grep -Eq '[1-9][0-9]*[[:space:]]+out[[:space:]]+of[[:space:]]+resource' "$OUTPUT"; then
+            VERIFICATION_RESULT="$VERIFICATION_RESULT_VERIFICATION_OUT_OF_RESOURCE"
+        fi
+    fi
+
+    # if the result is unknown, print dafny output to stderr
+    if [ "$VERIFICATION_RESULT" = "$VERIFICATION_RESULT_UNKNOWN" ]; then
+        echo "error: verification result unknown. Configuration: $BENCHMARK $LANGUAGE $PROVER $TYPE_ENCODING" >&2
+        cat "$OUTPUT" >&2
+	    echo "" >&2
+    fi
+
+    # cleanup the output
+    rm -f "$OUTPUT"
+
+    # print the result
+    print_csv_line "$SUITE" "$BENCHMARK" "$LANGUAGE" "$PROVER" "$TYPE_ENCODING" "$VERIFICATION_RESULT" "$ELAPSED_MS" "$EXIT_CODE"
+
+    return 0
+}
+
+print_csv_header()
+{
+    printf "%s,%s,%s,%s,%s,%s,%s,%s\n" \
+        "suite" \
+        "benchmark" \
+        "language" \
+        "prover" \
+        "type_encoding" \
+        "verification_result" \
+        "elapsed_ms" \
+        "exit_code"
+}
+
+# Arguments: suite, benchmark, language, prover, type_encoding, verification_result, elapsed_ms, exit_code
+print_csv_line()
+{
+    printf "%s,%s,%s,%s,%s,%s,%s,%s\n" \
+        "$1" \
+        "$(basename "$2")" \
+        "$3" \
+        "$4" \
+        "$5" \
+        "$6" \
+        "$7" \
+        "$8"
+}
+
+
+print_csv_header
+
+I=0
+while [ "$I" -lt "$REPEAT" ]; do
+    for BENCHMARK_DIR in "$@"; do
+        # let the 'suite' be the benchmark directory name
+        SUITE="$(basename  "$(realpath "$BENCHMARK_DIR")")"
+
+        # for each benchmark
+        find "$BENCHMARK_DIR" -type f -name '*.dfy' -print |
+        while IFS= read -r BENCHMARK; do
+            
+            # run the benchmark in different configurations
+
+
+            # vampire+tptp in poly,mono,arg,pred
+            for TYPE_ENCODING in \
+                "$TYPE_ENCODING_POLYMORPHIC" \
+                "$TYPE_ENCODING_MONOMORPHIC" \
+                "$TYPE_ENCODING_PREDICATES" \
+                "$TYPE_ENCODING_ARGUMENTS"
+            do
+                run_benchmark "$SUITE" "$BENCHMARK" "$LANGUAGE_TPTP" "$PROVER_VAMPIRE" "$TYPE_ENCODING"
+            done
+
+
+            # vampire+smtlib in mono,arg,pred
+            for TYPE_ENCODING in \
+                "$TYPE_ENCODING_MONOMORPHIC" \
+                "$TYPE_ENCODING_PREDICATES" \
+                "$TYPE_ENCODING_ARGUMENTS"
+            do
+                run_benchmark "$SUITE" "$BENCHMARK" "$LANGUAGE_SMTLIB" "$PROVER_VAMPIRE" "$TYPE_ENCODING"
+            done
+
+            # z3+smtlib in mono,arg,pred
+            for TYPE_ENCODING in \
+                "$TYPE_ENCODING_MONOMORPHIC" \
+                "$TYPE_ENCODING_PREDICATES" \
+                "$TYPE_ENCODING_ARGUMENTS"
+            do
+                run_benchmark "$SUITE" "$BENCHMARK" "$LANGUAGE_SMTLIB" "$PROVER_Z3" "$TYPE_ENCODING"
+            done
+        done
+    done
+    I=$((I + 1))
+done
+
+exit 0
