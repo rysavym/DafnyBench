@@ -18,10 +18,13 @@ The following changes were made to the source:
   - `DafnyBench/dataset/ground_truth/dafny-synthesis_task_id_399.dfy`
   - `DafnyBench/dataset/ground_truth/dafny-synthesis_task_id_799.dfy`
 - Edited `groupTheory_tmp_tmppmmxvu8h_assignment1.dfy` such that it verifies under Dafny 4.11.0
-- Added the script used to execute the benchmark and measure the performance of the TPTP plugin.
-Run with `./run-benchmarks <TPTP Prelude> <TPTP Plugin> DafnyBench/dataset/ground_truth`
+- Added the script used to execute the benchmark and measure the performance of the TPTP plugin:
+  - for the bachelor thesis, the script used to execute the benchmark is `run-benchmarks-thesis`, and the result is in `result-thesis.csv`
+  - analogously, for the iFS conference paper, the script used to execute the benchmark is `run-benchmarks-ifs`, and the result is in `result-ifs.csv`
 
-The modifications were made by Marek Ryšavý on 30. August 2026, are made available under the same license.
+Run with `./run-benchmarks-ifs <TPTP Prelude> <TPTP Plugin> DafnyBench/dataset/ground_truth`
+
+The modifications were made by Marek Ryšavý on 30. August 2026 and 30. September 2026, are made available under the same license.
 
 The original benchmark programs are attributed to Chloe Loughridge, Qinyi Sun, Seth Ahrenbach, Federico Cassano, 
 Chuyue Sun, Ying Sheng, Anish Mudide, Md Rakib Hossain Misu, Nada Amin and Max Tegmark.

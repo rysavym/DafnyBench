@@ -1,4 +1,6 @@
-data <- read.csv("result.csv", stringsAsFactors = FALSE)
+# data <- read.csv("result-thesis.csv", stringsAsFactors = FALSE)
+data <- read.csv("result-ifs.csv", stringsAsFactors = FALSE)
+
 counts <- as.data.frame(
   table(
     data$prover,
@@ -23,6 +25,7 @@ counts <- counts[order(
 ), ]
 print(counts)
 
+# result-thesis.csv
 #     prover type_encoding language          verification_result count
 # 33 vampire     arguments   smtlib       VERIFICATION_TIMED_OUT   426
 # 49 vampire     arguments   smtlib                     VERIFIED   351
@@ -51,3 +54,31 @@ print(counts)
 # 40      z3    predicates   smtlib       VERIFICATION_TIMED_OUT    17
 # 56      z3    predicates   smtlib                     VERIFIED   713
 
+# result-ifs.csv
+#     prover type_encoding language          verification_result count
+# 33 vampire     arguments   smtlib       VERIFICATION_TIMED_OUT   454
+# 49 vampire     arguments   smtlib                     VERIFIED   323
+# 41 vampire     arguments     tptp       VERIFICATION_TIMED_OUT   489
+# 57 vampire     arguments     tptp                     VERIFIED   288
+# 35 vampire   monomorphic   smtlib       VERIFICATION_TIMED_OUT   438
+# 51 vampire   monomorphic   smtlib                     VERIFIED   339
+# 43 vampire   monomorphic     tptp       VERIFICATION_TIMED_OUT   502
+# 59 vampire   monomorphic     tptp                     VERIFIED   275
+# 45 vampire   polymorphic     tptp       VERIFICATION_TIMED_OUT   523
+# 61 vampire   polymorphic     tptp                     VERIFIED   254
+# 39 vampire    predicates   smtlib       VERIFICATION_TIMED_OUT   499
+# 55 vampire    predicates   smtlib                     VERIFIED   278
+# 47 vampire    predicates     tptp       VERIFICATION_TIMED_OUT   544
+# 63 vampire    predicates     tptp                     VERIFIED   233
+# 2       z3     arguments   smtlib                 NOT_VERIFIED    24
+# 18      z3     arguments   smtlib VERIFICATION_OUT_OF_RESOURCE     1
+# 34      z3     arguments   smtlib       VERIFICATION_TIMED_OUT    17
+# 50      z3     arguments   smtlib                     VERIFIED   735
+# 4       z3   monomorphic   smtlib                 NOT_VERIFIED    25
+# 20      z3   monomorphic   smtlib VERIFICATION_OUT_OF_RESOURCE     1
+# 36      z3   monomorphic   smtlib       VERIFICATION_TIMED_OUT    16
+# 52      z3   monomorphic   smtlib                     VERIFIED   735
+# 8       z3    predicates   smtlib                 NOT_VERIFIED    47
+# 24      z3    predicates   smtlib VERIFICATION_OUT_OF_RESOURCE     1
+# 40      z3    predicates   smtlib       VERIFICATION_TIMED_OUT    11
+# 56      z3    predicates   smtlib                     VERIFIED   718
