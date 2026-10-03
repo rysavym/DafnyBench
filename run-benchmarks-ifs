@@ -129,8 +129,9 @@ verify_vampire_smtlib_monomorphic()
 
 verify_z3_smtlib_arguments() 
 {
-    dafny verify \
+    dafny-unpatched verify \
         --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --solver-path ~/.local/bin/z3-4.12.1 \
         --boogie "/typeEncoding:a" \
         --allow-warnings \
         "$1"
@@ -138,8 +139,9 @@ verify_z3_smtlib_arguments()
 
 verify_z3_smtlib_predicates() 
 {
-    dafny verify \
+    dafny-unpatched verify \
         --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --solver-path ~/.local/bin/z3-4.12.1 \
         --boogie "/typeEncoding:p" \
         --allow-warnings \
         "$1"
@@ -147,8 +149,9 @@ verify_z3_smtlib_predicates()
 
 verify_z3_smtlib_monomorphic() 
 {
-    dafny verify \
+    dafny-unpatched verify \
         --verification-time-limit "$DAFNY_VERIFICATION_TIME_LIMIT" \
+        --solver-path ~/.local/bin/z3-4.12.1 \
         --boogie "/typeEncoding:m" \
         --allow-warnings \
         "$1"
@@ -292,8 +295,8 @@ while [ "$I" -lt "$REPEAT" ]; do
             do
                 run_benchmark "$SUITE" "$BENCHMARK" "$LANGUAGE_TPTP" "$PROVER_VAMPIRE" "$TYPE_ENCODING"
             done
-
-
+            
+            
             # vampire+smtlib in mono,arg,pred
             for TYPE_ENCODING in \
                 "$TYPE_ENCODING_MONOMORPHIC" \
